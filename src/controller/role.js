@@ -70,3 +70,44 @@ async function createUniqueSlug(slug) {
 
   return uniqueSlug;
 }
+
+export const getRoleById = async (req, res) =>{
+  const id = req.params.id;
+  try {
+    const role = await Role.findById(id)
+    if(!role || role.length === 0){
+      return res.status(400).json({
+        message: "Không tìm thấy phân quyền !"
+      });
+    }
+    return res.status(200).json({
+      message:  ` Lấy dữ liệu phân quyền theo id : ${id} thành công !`,
+      role,
+    })    
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "error server :(("
+    })
+  }
+}
+
+export const getRoleBySlug = async (req , res ) =>{
+  const slug = req.params.slug;
+try {
+  const role = await Role.findOne({slug})
+  if(!role || role.length === 0 ){
+    return res.status(400).json({
+      message: `Không tìm được dữ liệu phân quyền slug :${slug}`,
+    })
+  }
+  return res.status(200).json({
+    message: `Lấy dự liệu thành công bởi slug: ${slug} `,
+    role,
+  })
+
+} catch (error) {
+  return res.status(500).json({
+    message: error.message || "error server :(("
+  })
+}
+}
