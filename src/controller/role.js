@@ -111,3 +111,52 @@ try {
   })
 }
 }
+
+
+export const getAllRole = async (req, res) => {
+  try {
+    const role = await Role.find({});
+    if (!role || role.length === 0) {
+      return res.json({
+        message: "Không có quyền nào",
+      });
+    }
+    return res.status(200).json({
+      message: "Lấy danh sách quyền thành công",
+      role,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+export const removeRole = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const role = await Role.findOne({ _id: id });
+    if (!role) {
+      return res.status(400).json({
+        message: "Không tìm thấy quyền",
+      });
+    }
+
+    // Xóa quyền
+    const deleteRole = await Role.findByIdAndDelete(id);
+    if (!deleteRole) {
+      return res.status(400).json({
+        message: "Xóa quyền không thành công",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Xóa quyền thành công",
+      deleteRole,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
