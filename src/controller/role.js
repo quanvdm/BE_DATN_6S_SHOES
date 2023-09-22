@@ -55,6 +55,60 @@ export const createRole = async (req, res) => {
   }
 };
 
+
+// Update role
+export const updateRole = async (req, res) => {
+  try {
+    const idRole = await Role.findById(req.params.id);
+    if (!idRole || idRole.length === 0) {
+      return res.status(400).json({
+        message: "Không tìm thấy thông tin quyền",
+      });
+    }
+
+    const checkName = await Role.findOne({ role_name: req.body.role_name });
+    if (checkName) {
+      return res.status(400).json({
+        message: "Quyền đã tồn tại",
+      });
+    }
+
+    const { error } = RoleUpdateSchema.validate(req.body, {
+      abortEarly: false,
+    });
+
+    if (error) {
+      const errorMessages = error.details.map((detail) => detail.message);
+      return res.status(400).json({
+        message: errorMessages,
+      });
+    }
+
+    // Slug
+    const slug = slugify(req.body.role_name, { lower: true });
+
+    let uniqueSlug = await createUniqueSlug(slug);
+
+    const dataRole = _.merge(req.body, { slug: uniqueSlug });
+
+    const role = await Role.findByIdAndUpdate(req.params.id, dataRole, {
+      new: true,
+    });
+
+    if (!role || role.length === 0) {
+      return res.status(400).json({
+        message: "Cập nhật quyền thất bại",
+      });
+    }
+
+    return res.status(200).json({ message: "Sửa quyền thành công", role });
+  } catch (error) {
+    return res.status(200).json({
+      message: error.message || "Lỗi server",
+    });
+  }
+};
+
 async function createUniqueSlug(slug) {
   let uniqueSlug = slug;
   let counter = 1;
