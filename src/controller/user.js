@@ -100,12 +100,6 @@ export const createUserProfile = async (req, res) => {
       });
     }
 
-    setTimeout(() => {
-      if (!user.isVerified) {
-        deleteUnverifiedAccounts();
-      }
-    }, 3 * 24 * 60 * 60 * 1000);
-
     // //LƯU MÃ VÀO DB, CONLLECTION USER
     user.verifyToken = {
       token: verifyToken,
@@ -153,26 +147,6 @@ export const verifyUser = async (req, res) => {
     return res.status(500).json({ message: error.message || "Lỗi server" });
   }
 };
-
-async function deleteUnverifiedAccounts() {
-  try {
-    const users = await User.find({ isVerified: false });
-    for (const user of users) {
-      const createdAt = new Date(user.verifyToken.expiration);
-      const expirationDate = new Date(
-        createdAt.getTime() + 3 * 24 * 60 * 60 * 1000
-      );
-      const currentDate = new Date();
-
-      if (currentDate > expirationDate) {
-        await User.findByIdAndDelete(user._id);
-        console.log(`Đã xóa tài khoản ${user._id}`);
-      }
-    }
-  } catch (error) {
-    console.error("Lỗi khi xóa tài khoản:", error);
-  }
-}
 
 export const getAllUsers = async (req, res, next) => {
   const {
