@@ -13,6 +13,7 @@ export const createUserProfile = async (req, res) => {
     user_email,
     user_password,
     user_fullName,
+    user_username,
     user_confirmPassword,
     role_id,
     ...rest
@@ -30,10 +31,16 @@ export const createUserProfile = async (req, res) => {
       });
     }
 
-    const userExist = await User.findOne({ user_email });
-    if (userExist) {
+    const userEmailExist = await User.findOne({ user_email });
+    if (userEmailExist) {
       return res.status(400).json({
         message: "Email người dùng đã tồn tại",
+      });
+    }
+    const usernameExist = await User.findOne({ user_username });
+    if (usernameExist) {
+      return res.status(400).json({
+        message: "Tên tài khoản đã tồn tại",
       });
     }
 
@@ -52,12 +59,13 @@ export const createUserProfile = async (req, res) => {
     const formRequest = {
       user_email,
       user_password,
+      user_username,
       role_id,
       user_password: hashPassword,
       ...rest,
     };
     const user = await User.create(formRequest);
-    user.user_password = undefined;
+    // user.user_password = undefined;
 
     const verifyToken = crypto.randomBytes(3).toString("hex").toUpperCase();
     const tokenExpiration = Date.now() + 3 * 24 * 60 * 60 * 1000;
@@ -79,7 +87,7 @@ export const createUserProfile = async (req, res) => {
 
     // // GỬI EMAIL VỚI TRANSPORTER ĐÃ ĐƯỢC CONFIG XONG
     const info = await transporter.sendMail({
-      from: `"Sport Shoes 👟😘" ${process.env.EMAIL_SENDER}`, // sender address
+      from: `"6s Shoes 👟😘" ${process.env.EMAIL_SENDER}`, // sender address
       to: user_email, // list of receivers
       subject: "Xác nhận tài khoản", // Subject line
       html: `<p style="font-size: 16px; color: #002140; font-weight: 600;">Nhấp vào <a href="${verificationLink}">đây</a> để xác nhận tài khoản.</p>`, // html body

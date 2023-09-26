@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema(
     },
     user_status: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     user_date_of_birth: {
       type: Date,
