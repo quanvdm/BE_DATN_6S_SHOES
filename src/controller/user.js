@@ -173,3 +173,67 @@ async function deleteUnverifiedAccounts() {
     console.error("Lỗi khi xóa tài khoản:", error);
   }
 }
+
+export const getAllUsers = async (req, res, next) => {
+  const {
+    _page = 1,
+    _limit = 10,
+    _sort = "createdAt",
+    _order = "asc",
+  } = req.query;
+  const options = {
+    page: _page || 1,
+    limit: _limit || 10,
+    sort: { [_sort]: _order === "asc" ? -1 : 1 },
+  };
+  try {
+    const users = await User.paginate({}, options);
+    if (!users)
+      return res
+        .status(401)
+        .json({ message: "Danh sách người dùng không tồn tại!" });
+    return res.status(200).json({
+      message: "Danh sách tài khoản người dùng!",
+      users: users.docs,
+      pagination: {
+        currentPage: users.page,
+        totalPages: users.totalPages,
+        totalItems: users.totalDocs,
+        limit: users.limit,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Error server: " + error.message });
+  }
+};
+export const banUser = async (req, res) => {
+  const _id = req.params.id;
+  try {
+    // Kiểm tra xem người dùng có tồn tại hay không
+    const user = await User.findOne({ _id });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user && user.user_status === true) {
+      const result = await User.updateOne(
+        { _id },
+        { $set: { user_status: false } }
+      );
+      return res.status(200).json({
+        message: "Ban tài khoản người dùng thành công!",
+        data: result,
+      });
+    } else {
+      const result = await User.updateOne(
+        { _id },
+        { $set: { user_status: true } }
+      );
+      return res.status(200).json({
+        message: "Khôi phục tài khoản người dùng thành công!",
+        data: result,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Error server: " + error.message });
+  }
+};
