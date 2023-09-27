@@ -1,4 +1,6 @@
+import slugify from "slugify";
 import Brand from "../model/brand"
+import { BrandAddSchema } from "../schema/brand";
 
 export const getAllBrand = async (req, res) => {
     const {
@@ -56,6 +58,80 @@ export const getAllBrand = async (req, res) => {
         })
     }
 }
+async function createUniqueSlug(slug) {
+    let uniqueSlug = slug;
+    let counter = 1;
+    while (true) {
+      const existingBrand = await Brand.findOne({ slug: uniqueSlug });
+      if (!existingBrand) {
+        break;
+      }
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
+    }
+    return uniqueSlug;
+  }
+  export const createBrand = async (req, res) => {
+    const formData = req.body;
+    let { brand_name } = req.body; // Lấy tên thương hiệu từ req.body
+
+    // Loại bỏ khoảng trắng ở đầu và cuối chuỗi
+    brand_name = brand_name.trim();
+
+    // Loại bỏ các khoảng trắng liền nhau trong chuỗi
+    brand_name = brand_name.replace(/\s+/g, ' ');
+// Kiểm tra xem có phải là một hình ảnh hay không? Nếu là hình ảnh th
+    // if(!formData?.brand_image){
+    // return res.status(403).send("Please upload an image");
+    // };
+    try {
+        const { error } = await BrandAddSchema.validate(formData, {
+            abortEarly: false,
+        });
+
+        if (error) {
+            const errorFormReq = error.details.map((err) => err.message);
+            return res.status(400).json({
+                message: errorFormReq
+            });
+        }
+        const normalizedBrandName = brand_name.toLowerCase();
+
+        const checkName = await Brand.findOne({ brand_name: normalizedBrandName });
+
+        if (checkName) {
+            return res.status(400).json({
+                message: "Tên Thương Hiệu Đã Bị Trùng Vui Lòng Chọn Những Tiêu chuẩn nghĩa khác nhau"
+            });
+        }
+        const slug = slugify(brand_name, { lower: true });
+        let uniqueSlug = await createUniqueSlug(slug);
+        const dataBrand = {
+            ...formData,
+            slug: uniqueSlug.toLowerCase(),
+            brand_name: normalizedBrandName,
+        };
+        const brand = await Brand.create(dataBrand);
+
+        brand.slug = uniqueSlug;
+        await brand.save();
+
+        if (!brand) {
+            return res.status(400).json({
+                message: "Lỗi thêm thương hiệu :(("
+            });
+        }
+
+        return res.status(200).json({
+            message: "Thêm thương hiệu thành công !",
+            brand
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Error Server!"
+        });
+    }
+};
 
 export const deleteBrand = async ( req, res ) =>{
     const id = req.params.id;
