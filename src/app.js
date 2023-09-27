@@ -8,6 +8,7 @@ import UserRouter from "./routes/user";
 import AuthRouter from "./routes/auth"
 import BrandRouter from './routes/brand'
 import uploadRouter from "./routes/upload";
+import CategoryRouter from "./routes/category";
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use("/api", UserRouter);
 app.use("/api", AuthRouter);
 app.use("/api", BrandRouter)
 app.use("/api", uploadRouter);
+app.use("/api", CategoryRouter);
 
 // connect db
 connectDB(process.env.MONGO_URL);
