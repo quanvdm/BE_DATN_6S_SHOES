@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser"
 import RoleRouter from "./routes/role";
 import UserRouter from "./routes/user";
 import AuthRouter from "./routes/auth"
+import BrandRouter from './routes/brand'
 dotenv.config();
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(cookieParser())
 app.use("/api", RoleRouter);
 app.use("/api", UserRouter);
 app.use("/api", AuthRouter);
+app.use("/api", BrandRouter)
 // connect db
 connectDB(process.env.MONGO_URL);
 
