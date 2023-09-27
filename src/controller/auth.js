@@ -315,3 +315,107 @@ export const changePassword = async (req, res) => {
     });
   }
 };
+
+// Forget password
+export const forgetPassword = async (req, res) => {
+  const { user_email } = req.body;
+  try {
+    const user = await User.findOne({ user_email });
+    if (!user)
+      return res
+        .status(401)
+        .json({ message: "Tài khoản người dùng không tồn tại!" });
+    const transporter = nodemailer.createTransport({
+      host: "smtp.forwardemail.net",
+      port: 465,
+      secure: true,
+      service: "gmail",
+      auth: {
+        // TODO: replace `user` and `pass` values from <https://forwardemail.net>
+        user: process.env.EMAIL_SENDER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+    // GỬI EMAILVỚI TRANSPORTER ĐÃ ĐƯỢC CONFIG XONG
+    const verifyToken = crypto.randomBytes(3).toString("hex").toUpperCase();
+    const tokenExpiration = Date.now() + 2 * 1000;
+    user.verifyToken = {
+      token: verifyToken,
+      expiration: tokenExpiration,
+    };
+    await user.save();
+
+    const info = await transporter.sendMail({
+      from: `"6s Shoes 👟😘" ${process.env.EMAIL_SENDER}`, // sender address
+      to: user?.user_email, // list of receivers
+      subject: "Mail xác nhận tài khoản của bạn muốn thay đổi mật khẩu", // Subject line
+      html: `<p style="font-size: 16px; color: #002140; font-weight: 600;">Đây là mã xác minh <a href="#">${verifyToken} đây</a> để xác nhận tài khoản.</p>`,
+    });
+    if (!info) {
+      return res.status(400).json({
+        message:
+          "Mã kích hoạt của bạn chưa được gửi đến email. Vui lòng kiểm tra lại <3",
+      });
+    }
+    // Lên lịch xóa token sau khi tokenExpiration hết hạn (ví dụ: sau 2 phút)
+    setTimeout(async () => {
+      try {
+        return await User.updateOne(
+          { _id: user._id },
+          { $set: { verifyToken: null } }
+        );
+      } catch (error) {
+        console.error("Lỗi khi xóa token hết hạn:", error);
+      }
+    }, 2 * 60 * 1000); // 2 phút
+    return res.status(200).json({ message: "Email xác nhận đã được gửi." });
+  } catch (error) {
+    return res.status(500).json({ message: "Erorr server: " + error.message });
+  }
+};
+
+export const verifyToken = async (req, res) => {
+  const { token } = req.body;
+  try {
+    const user = await User.findOne({ "verifyToken.token": token });
+    if (!user) {
+      return res.status(400).json({
+        message: "Liên kết xác nhận không hợp lệ vui lòng xác nhận lại!",
+        success: false,
+      });
+    } else {
+      user.verifyToken = null;
+      await user.save();
+      return res.status(200).json({
+        message:
+          "Xác nhận thành công. Bạn có thể cập nhật mật khẩu mới ngay bây giờ.",
+        success: true,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Error server" + error.message });
+  }
+};
+
+export const resetPassWord = async (req, res) => {
+  const { user_email, password, confirmPassword } = req.body;
+  try {
+    const user = await User.findOne({ user_email });
+    if (!user)
+      return res.status(401).json({ message: "Tài khoản không tồn tại" });
+    if (password !== confirmPassword)
+      return res.status(400).json({ message: "Mật khẩu không trùng nhau!" });
+    const hashPassword = await bcrypt.hash(password, 10);
+    user.user_password = hashPassword;
+    await user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật lại mật khẩu thành công!",
+      user,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Erorr server: " + error.message });
+  }
+};
