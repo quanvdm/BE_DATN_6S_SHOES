@@ -1,6 +1,10 @@
 import User from "../model/user";
 import bcrypt from "bcryptjs";
-import { signinSchema, signupSchema } from "../schema/auth";
+import {
+  changePasswordSchema,
+  signinSchema,
+  signupSchema,
+} from "../schema/auth";
 import { generalAccessToken, generalRefreshToken } from "../service/jwtService";
 import jwt from "jsonwebtoken";
 import cron from "node-cron";
@@ -265,3 +269,49 @@ const checkAndDeleteAccounts = async () => {
 cron.schedule("0 0 * * *", () => {
   checkAndDeleteAccounts();
 });
+
+// Change Password
+export const changePassword = async (req, res) => {
+  const { password, confirmPassword, user_email, new_password } = req.body;
+
+  try {
+    const { error } = changePasswordSchema.validate(
+      { password, confirmPassword, user_email, new_password },
+      {
+        abortEarly: false,
+      }
+    );
+    if (error) {
+      const errors = error.details.map((err) => err.message);
+      return res.status(400).json({
+        message: errors,
+      });
+    }
+    // check email có tồn tại trong DB không
+    const user = await User.findOne({ user_email });
+    if (!user) {
+      return res.status(400).json({
+        message: "Tài khoản không tồn tại",
+      });
+    }
+    if (new_password !== confirmPassword) {
+      return res.status(400).json({
+        message: "Mật khẩu không không khớp nhau!",
+      });
+    }
+    const isMatch = await bcrypt.compare(password, user.user_password);
+    if (!isMatch)
+      return res.status(400).json({
+        message: "Mật khẩu không không chính xác!",
+      });
+    const saltRounds = 10;
+    const hashPassword = bcrypt.hashSync(new_password, saltRounds);
+    user.user_password = hashPassword;
+    user.save();
+    return res.json({ message: "Thay đổi mật khẩu thành công!" });
+  } catch (error) {
+    return res.status(500).json({
+      message: " Error server :(( :" + error.message,
+    });
+  }
+};
