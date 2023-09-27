@@ -5,7 +5,8 @@ import cookieParser from "cookie-parser";
 
 import RoleRouter from "./routes/role";
 import UserRouter from "./routes/user";
-import AuthRouter from "./routes/auth";
+import AuthRouter from "./routes/auth"
+import BrandRouter from './routes/brand'
 import uploadRouter from "./routes/upload";
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(cookieParser());
 app.use("/api", RoleRouter);
 app.use("/api", UserRouter);
 app.use("/api", AuthRouter);
+app.use("/api", BrandRouter)
 app.use("/api", uploadRouter);
 
 // connect db
