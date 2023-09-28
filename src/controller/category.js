@@ -3,20 +3,20 @@ import slugify from "slugify";
 import { CategoryAddSchema } from "../schema/category";
 
 async function createUniqueSlug(slug) {
-    let uniqueSlug = slug;
-    let counter = 1;
-    while (true) {
-      const existingCategory = await Category.findOne({ slug: uniqueSlug });
-      if (!existingCategory) {
-        break;
-      }
-  
-      uniqueSlug = `${slug}-${counter}`;
-      counter++;
+  let uniqueSlug = slug;
+  let counter = 1;
+  while (true) {
+    const existingCategory = await Category.findOne({ slug: uniqueSlug });
+    if (!existingCategory) {
+      break;
     }
-  
-    return uniqueSlug;
+
+    uniqueSlug = `${slug}-${counter}`;
+    counter++;
   }
+
+  return uniqueSlug;
+}
 
 export const createCategory = async (req, res) => {
   const { category_name } = req.body;

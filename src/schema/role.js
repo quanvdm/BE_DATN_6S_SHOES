@@ -20,11 +20,13 @@ export const RoleUpdateSchema = Joi.object({
   role_status: Joi.boolean(),
   role_default: Joi.boolean(),
   role_is_new: Joi.boolean(),
-  role_description: Joi.string().min(2).max(255).required().messages({
+  role_description: Joi.string().min(2).max(255).messages({
     "string.min": "Mô tả phân quyền không được nhỏ hơn {#limit} ký tự",
     "string.max": "Mô tả phân quyền không được vượt quá {#limit} ký tự",
     "any.required": "Trường mô tả phân quyền là bắt buộc",
   }),
   users: Joi.array(),
   slug: Joi.string(),
+  createdAt: Joi.date(),
+  updatedAt: Joi.date(),
 });
