@@ -3,7 +3,6 @@ import Role from "../model/role";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
-// import cron from "node-cron";
 import crypto from "crypto";
 import { createUserSchema } from "../schema/user";
 dotenv.config();
@@ -180,6 +179,7 @@ export const getAllUsers = async (req, res, next) => {
     return res.status(500).json({ message: "Error server: " + error.message });
   }
 };
+
 export const banUser = async (req, res) => {
   const _id = req.params.id;
   try {
@@ -189,18 +189,20 @@ export const banUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     if (user && user.user_status === true) {
-      const result = await User.updateOne(
+      const result = await User.findByIdAndUpdate(
         { _id },
-        { $set: { user_status: false } }
+        { $set: { user_status: false } },
+        { new: true }
       );
       return res.status(200).json({
         message: "Ban tài khoản người dùng thành công!",
         data: result,
       });
     } else {
-      const result = await User.updateOne(
+      const result = await User.findByIdAndUpdate(
         { _id },
-        { $set: { user_status: true } }
+        { $set: { user_status: true } },
+        { new: true }
       );
       return res.status(200).json({
         message: "Khôi phục tài khoản người dùng thành công!",

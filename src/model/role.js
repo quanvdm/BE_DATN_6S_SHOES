@@ -6,7 +6,7 @@ const roleSchema = new mongoose.Schema(
     role_name: {
       type: String,
       maxlength: 50,
-      require: true,
+      required: true,
     },
     role_status: {
       type: Boolean,

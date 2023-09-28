@@ -9,17 +9,21 @@ import { generalAccessToken, generalRefreshToken } from "../service/jwtService";
 import jwt from "jsonwebtoken";
 import cron from "node-cron";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
+import crypto from "crypto";
 dotenv.config();
+
 export const signin = async (req, res) => {
+  const { user_email, user_password } = req.body;
   try {
     const { error } = signinSchema.validate(req.body, { abortEarly: false });
-    const { user_email, user_password } = req.body;
     if (error) {
       const errors = error.details.map((err) => err.message);
       return res.status(400).json({
         message: errors,
       });
     }
+
     // check email có tồn tại trong DB không
     const user = await User.findOne({ user_email });
     if (!user) {
@@ -33,12 +37,14 @@ export const signin = async (req, res) => {
         message: "Tài khoản bị khóa",
       });
     }
+
     //check tài khoản xác thực bằng qua email thì mới đăng nhập được
     if (user.isVerified === false) {
       return res.status(400).json({
         message: "Bạn hãy kiểm tra và xác thực tài khoản đề đăng nhập nhé ",
       });
     }
+
     //check kiểu dữ liệu của user trong DB và so sánh password người dùng nhập với passoword trong DB mà người dùng tạo đã lưu vào DB
     if (
       user.user_password !== undefined &&
@@ -52,11 +58,13 @@ export const signin = async (req, res) => {
       }
     }
     const checkPass = await bcrypt.compare(user_password, user.user_password);
+
     if (user && checkPass) {
       const accessToken = generalAccessToken({
         _id: user._id,
         role_id: user.role_id,
       });
+
       const refreshToken = generalRefreshToken({
         _id: user._id,
         role_id: user.role_id,
@@ -70,7 +78,6 @@ export const signin = async (req, res) => {
         sameSite: "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
-
       //người dùng login thành công thì trả về password = undefinded để tăng tính bảo mật cho người dùng
       user.user_password = undefined;
       return res.status(200).json({
@@ -143,7 +150,6 @@ export const requestRefreshToken = async (req, res) => {
 };
 
 // REGISTER
-
 export const register = async (req, res) => {
   const {
     user_email,
@@ -209,12 +215,12 @@ export const register = async (req, res) => {
       },
     });
 
-    // // GỬI EMAIL VỚI TRANSPORTER ĐÃ ĐƯỢC CONFIG XONG
+    // GỬI EMAIL VỚI TRANSPORTER ĐÃ ĐƯỢC CONFIG XONG
     const info = await transporter.sendMail({
       from: `"6s Shoes 👟😘" ${process.env.EMAIL_SENDER}`, // sender address
       to: user_email, // list of receivers
       subject: "Xác nhận tài khoản", // Subject line
-      html: `<p style="font-size: 16px; color: #002140; font-weight: 600;">Nhấp vào <a href="${verificationLink}">đây</a> để xác nhận tài khoản.</p>`, // html body
+      html: `<p style="font-size: 16px; color: #002140; font-weight: 600;">Nhấp vào <a href="${verificationLink}">đây</a> để kích hoạt tài khoản.</p>`, // html body
     });
 
     if (!info) {
@@ -241,7 +247,7 @@ export const register = async (req, res) => {
   }
 };
 
-// Hàm để kiểm tra và xóa tài khoản
+// Hàm để kiểm tra và xóa tài khoản nếu không kích hoạt tài khoản
 const checkAndDeleteAccounts = async () => {
   try {
     const users = await User.find();
@@ -266,27 +272,19 @@ const checkAndDeleteAccounts = async () => {
 };
 
 // Cấu hình cron job để chạy sau mỗi 2 phút
+// Auto
 cron.schedule("0 0 * * *", () => {
   checkAndDeleteAccounts();
 });
 
 // Change Password
 export const changePassword = async (req, res) => {
-  const { password, confirmPassword, user_email, new_password } = req.body;
+  const { user_password, user_email, newPassword, rePassword } = req.body;
 
   try {
-    const { error } = changePasswordSchema.validate(
-      { password, confirmPassword, user_email, new_password },
-      {
-        abortEarly: false,
-      }
-    );
-    if (error) {
-      const errors = error.details.map((err) => err.message);
-      return res.status(400).json({
-        message: errors,
-      });
-    }
+    const { error } = changePasswordSchema.validate(req.body, {
+      abortEarly: false,
+    });
     // check email có tồn tại trong DB không
     const user = await User.findOne({ user_email });
     if (!user) {
@@ -294,24 +292,60 @@ export const changePassword = async (req, res) => {
         message: "Tài khoản không tồn tại",
       });
     }
-    if (new_password !== confirmPassword) {
+
+    if (error) {
+      const errors = error.details.map((err) => err.message);
       return res.status(400).json({
-        message: "Mật khẩu không không khớp nhau!",
+        message: errors,
       });
     }
-    const isMatch = await bcrypt.compare(password, user.user_password);
-    if (!isMatch)
+
+    const checkPassword = await bcrypt.compare(
+      user_password,
+      user.user_password
+    );
+    if (!checkPassword) {
       return res.status(400).json({
-        message: "Mật khẩu không không chính xác!",
+        message: "Mật khẩu cũ không chính xác. Vui lòng nhập lại",
       });
-    const saltRounds = 10;
-    const hashPassword = bcrypt.hashSync(new_password, saltRounds);
-    user.user_password = hashPassword;
-    user.save();
-    return res.json({ message: "Thay đổi mật khẩu thành công!" });
+    }
+
+    const sameOldPasword = await bcrypt.compare(
+      newPassword,
+      user.user_password
+    );
+    if (sameOldPasword) {
+      return res.status(400).json({
+        message: "Bạn vừa nhập lại mật khẩu cũ. Vui lòng điền mật khẩu khác",
+      });
+    }
+
+    const reCheckPassword = await bcrypt.compare(
+      rePassword,
+      user.user_password
+    );
+
+    if (reCheckPassword) {
+      return res.status(400).json({
+        message: "Bạn chưa xác nhận lại mật khẩu mới. Vui lòng nhập lại",
+      });
+    }
+
+    const hashPassword = await bcrypt.hash(newPassword, 10);
+
+    const userChangePassword = await User.findByIdAndUpdate(
+      { _id: user._id },
+      { user_password: hashPassword },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: "Thay đổi mật khẩu thành công!",
+      userChangePassword,
+    });
   } catch (error) {
     return res.status(500).json({
-      message: " Error server :(( :" + error.message,
+      message: error.messag || "Lỗi server",
     });
   }
 };
@@ -322,9 +356,14 @@ export const forgetPassword = async (req, res) => {
   try {
     const user = await User.findOne({ user_email });
     if (!user)
-      return res
-        .status(401)
-        .json({ message: "Tài khoản người dùng không tồn tại!" });
+      return res.status(401).json({
+        message: "Tài khoản người dùng không tồn tại!",
+      });
+    if (!user.isVerified) {
+      return res.status(401).json({
+        message: "Tài khoản người dùng chưa được kích hoạt hoặc không tồn tại!",
+      });
+    }
     const transporter = nodemailer.createTransport({
       host: "smtp.forwardemail.net",
       port: 465,
@@ -338,7 +377,7 @@ export const forgetPassword = async (req, res) => {
     });
     // GỬI EMAILVỚI TRANSPORTER ĐÃ ĐƯỢC CONFIG XONG
     const verifyToken = crypto.randomBytes(3).toString("hex").toUpperCase();
-    const tokenExpiration = Date.now() + 2 * 1000;
+    const tokenExpiration = Date.now() + 2 * 60 * 1000;
     user.verifyToken = {
       token: verifyToken,
       expiration: tokenExpiration,
@@ -349,7 +388,7 @@ export const forgetPassword = async (req, res) => {
       from: `"6s Shoes 👟😘" ${process.env.EMAIL_SENDER}`, // sender address
       to: user?.user_email, // list of receivers
       subject: "Mail xác nhận tài khoản của bạn muốn thay đổi mật khẩu", // Subject line
-      html: `<p style="font-size: 16px; color: #002140; font-weight: 600;">Đây là mã xác minh <a href="#">${verifyToken} đây</a> để xác nhận tài khoản.</p>`,
+      html: `<p style="font-size: 16px; color: #002140; font-weight: 600;">Đây là mã xác minh <a href="#">${verifyToken}</a>.</p>`,
     });
     if (!info) {
       return res.status(400).json({
@@ -358,16 +397,16 @@ export const forgetPassword = async (req, res) => {
       });
     }
     // Lên lịch xóa token sau khi tokenExpiration hết hạn (ví dụ: sau 2 phút)
-    setTimeout(async () => {
-      try {
-        return await User.updateOne(
-          { _id: user._id },
-          { $set: { verifyToken: null } }
-        );
-      } catch (error) {
-        console.error("Lỗi khi xóa token hết hạn:", error);
-      }
-    }, 2 * 60 * 1000); // 2 phút
+    // setTimeout(async () => {
+    //   try {
+    //     return await User.updateOne(
+    //       { _id: user._id },
+    //       { $set: { verifyToken: null } }
+    //     );
+    //   } catch (error) {
+    //     console.error("Lỗi khi xóa token hết hạn:", error);
+    //   }
+    // }, 2 * 60 * 1000); // 2 phút
     return res.status(200).json({ message: "Email xác nhận đã được gửi." });
   } catch (error) {
     return res.status(500).json({ message: "Erorr server: " + error.message });
@@ -375,37 +414,66 @@ export const forgetPassword = async (req, res) => {
 };
 
 export const verifyToken = async (req, res) => {
-  const { token } = req.body;
+  const { user_email, verifyToken } = req.body;
   try {
-    const user = await User.findOne({ "verifyToken.token": token });
+    const user = await User.findOne({ user_email });
     if (!user) {
       return res.status(400).json({
-        message: "Liên kết xác nhận không hợp lệ vui lòng xác nhận lại!",
-        success: false,
-      });
-    } else {
-      user.verifyToken = null;
-      await user.save();
-      return res.status(200).json({
-        message:
-          "Xác nhận thành công. Bạn có thể cập nhật mật khẩu mới ngay bây giờ.",
-        success: true,
+        message: "Không tìm thấy tài khoản để xác minh!",
       });
     }
+
+    if (!verifyToken) {
+      return res.status(400).json({
+        message: "Bạn chưa nhập mã xác minh!",
+      });
+    }
+
+    const token = await User.findOne({
+      "verifyToken.token": verifyToken,
+    });
+    if (!token) {
+      return res.status(400).json({
+        message: "Liên kết xác nhận không hợp lệ vui lòng xác nhận lại!",
+      });
+    }
+    const storeToken = user.verifyToken.token;
+
+    const expirationTime = user.verifyToken.expiration;
+    if (Date.now() > expirationTime) {
+      return res.status(400).json({
+        message: "Mã xác minh đã hết hạn. Vui lòng yêu cầu lại mã.",
+      });
+    }
+
+    // Check xem token người dùng gửi lên có khớp với token trong db không
+    if (!verifyToken || (verifyToken && verifyToken !== storeToken)) {
+      return res.status(400).json({
+        message: "Mã xác minh không hợp lệ! Vui lòng kiểm tra lại!",
+      });
+    }
+
+    //LƯU MÃ VÀO DB, CONLLECTION USER
+    user.verifyToken = null;
+    await user.save();
+
+    res.status(200).json({
+      message: "Xác minh thành công. Bạn có thể đổi lại mật khẩu ngay bây giờ",
+    });
   } catch (error) {
     return res.status(500).json({ message: "Error server" + error.message });
   }
 };
 
 export const resetPassWord = async (req, res) => {
-  const { user_email, password, confirmPassword } = req.body;
+  const { user_email, user_password, user_confirmPassword } = req.body;
   try {
     const user = await User.findOne({ user_email });
     if (!user)
       return res.status(401).json({ message: "Tài khoản không tồn tại" });
-    if (password !== confirmPassword)
+    if (user_password !== user_confirmPassword)
       return res.status(400).json({ message: "Mật khẩu không trùng nhau!" });
-    const hashPassword = await bcrypt.hash(password, 10);
+    const hashPassword = await bcrypt.hash(user_password, 10);
     user.user_password = hashPassword;
     await user.save();
     return res.status(200).json({

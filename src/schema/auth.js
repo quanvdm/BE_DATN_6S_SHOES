@@ -50,19 +50,19 @@ export const changePasswordSchema = joi.object({
     "string.empty": "Email không được để trống",
     "any.required": " Trường email là bắt buộc",
   }),
-  password: joi.string().required().min(5).messages({
-    "string.min": "Password phải có ít nhất {#limit} ký tự",
-    "string.empty": "Password không được để trống",
-    "any.required": "Trường Password là bắt buộc",
+  user_password: joi.string().required().min(5).messages({
+    "string.min": "Mật khẩu cũ phải có ít nhất {#limit} ký tự",
+    "string.empty": "Mật khẩu cũ không được để trống",
+    "any.required": "Trường Mật khẩu cũ là bắt buộc",
   }),
-  new_password: joi.string().required().min(5).messages({
-    "string.min": "Password phải có ít nhất {#limit} ký tự",
-    "string.empty": "Password không được để trống",
-    "any.required": "Trường Password là bắt buộc",
+  newPassword: joi.string().required().min(5).messages({
+    "string.min": "Mật khẩu mới phải có ít nhất {#limit} ký tự",
+    "string.empty": "Mật khẩu mới không được để trống",
+    "any.required": "Trường Mật khẩu mới là bắt buộc",
   }),
-  confirmPassword: joi.string().required().min(5).messages({
-    "string.min": "Password phải có ít nhất {#limit} ký tự",
-    "string.empty": "Password không được để trống",
-    "any.required": "Trường Password là bắt buộc",
+  rePassword: joi.string().required().min(5).messages({
+    "string.min": "Xác nhận mật khẩu phải có ít nhất {#limit} ký tự",
+    "string.empty": "Xác nhận mật khẩu không được để trống",
+    "any.required": "Trường Xác nhận mật khẩu là bắt buộc",
   }),
 });
