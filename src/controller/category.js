@@ -3,20 +3,20 @@ import slugify from "slugify";
 import { CategoryAddSchema } from "../schema/category";
 
 async function createUniqueSlug(slug) {
-  let uniqueSlug = slug;
-  let counter = 1;
-  while (true) {
-    const existingCategory = await Category.findOne({ slug: uniqueSlug });
-    if (!existingCategory) {
-      break;
+    let uniqueSlug = slug;
+    let counter = 1;
+    while (true) {
+      const existingCategory = await Category.findOne({ slug: uniqueSlug });
+      if (!existingCategory) {
+        break;
+      }
+  
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
     }
-
-    uniqueSlug = `${slug}-${counter}`;
-    counter++;
+  
+    return uniqueSlug;
   }
-
-  return uniqueSlug;
-}
 
 export const createCategory = async (req, res) => {
   const { category_name } = req.body;
@@ -70,3 +70,44 @@ export const createCategory = async (req, res) => {
     });
   }
 };
+
+export const getCategoryById = async (req, res) =>{
+    const id = req.params.id;
+    try {
+      const category = await Category.findById(id)
+      if(!category || category.length === 0){
+        return res.status(400).json({
+          message: "Không tìm thấy danh mục !"
+        });
+      }
+      return res.status(200).json({
+        message:  ` Lấy dữ liệu danh mục theo id : ${id} thành công !`,
+        category,
+      })    
+    } catch (error) {
+      return res.status(500).json({
+        message: error.message || "error server :(("
+      })
+    }
+  }
+  
+  export const getCategoryBySlug = async (req , res ) =>{
+    const slug = req.params.slug;
+  try {
+    const category = await Category.findOne({slug})
+    if(!category || category.length === 0 ){
+      return res.status(400).json({
+        message: `Không tìm được dữ liệu danh mục slug :${slug}`,
+      })
+    }
+    return res.status(200).json({
+      message: `Lấy dự liệu thành công danh mục bởi slug: ${slug} `,
+      category,
+    })
+  
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "error server :(("
+    })
+  }
+  }
