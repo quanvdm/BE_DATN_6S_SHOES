@@ -7,10 +7,11 @@ import {
   updateCategory,
   getCategoryBySlug,
 } from "../controller/category";
+import { authorize } from "../middleware/authorization";
 
 const Router = express.Router();
 
-Router.post("/categories", createCategory);
+Router.post("/categories",authorize(['admin','member']),createCategory);
 Router.put("/categories/:id", updateCategory);
 
 Router.get("/categories/:id", getCategoryById);
