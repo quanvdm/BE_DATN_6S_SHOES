@@ -1,7 +1,7 @@
 
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-
+import User from "../model/user";
 dotenv.config();
 
 export const middlewareController = async (req,res,next) =>{
@@ -11,15 +11,46 @@ export const middlewareController = async (req,res,next) =>{
     const accessToken = token.split(" ")[1];
     jwt.verify(accessToken, process.env.jWT_SECRET_KEY,(err,decode)=>{
       if(err){
-        return res.status(403).json("Token is not valid")
+        if (err.name === "JsonWebTokenError") {
+            return res.status(401).json({
+              message: "Token không hợp lệ",
+            });
+          }
+          if (err.name == "TokenExpiredError") {
+            return res.status(401).json({
+              message: "Token hết hạn",
+            });
+          }
       }
+      console.log("decode", decode);
       req.user = decode;
       next();
     })
   }
   else{
-    return res.status(401).json("chưa xác thực ( you are not authenticaed")
+    return res.status(401).json({
+      message :"chưa xác thực ( you are not authenticaed)"
+    })
   }
+}
+export const verifyUserController = async (req , res ,next ) =>{
+   middlewareController(req ,res,async ()=>{
+    const user = req.user;
+    const user_id = req.params.id
+    const user_slug = req.params.slug
+    // const slug = req.slug
+    console.log("user",user);
+    console.log("user", user.slug);
+    console.log("slug",user);
+    if (user && user._id == user_id || user && user.slug == user_slug ) {
+      next();
+    }
+    else{
+      return res.status(400).json({
+        message: "bạn không có quyền làm điều này !"
+      })
+    }
+   })
 }
 
   // export const authenticate = async (req, res, next) => {
