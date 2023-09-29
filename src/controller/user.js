@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { createUserSchema } from "../schema/user";
+import { log } from "console";
 dotenv.config();
 
 export const createUserProfile = async (req, res) => {
@@ -213,3 +214,63 @@ export const banUser = async (req, res) => {
     return res.status(500).json({ message: "Error server: " + error.message });
   }
 };
+
+//dùng để check là chỉ người dùng xóa chính tài khoản họ và admin xóa người dùng , còn người khác sẽ không có quyền xóa 
+export const deleteUser = async (req ,res) =>{
+  const {id} = req.params;
+  try {
+    const user = await User.find({_id: id})
+    if(!user){
+       return res.status(400).json({
+        message: "không tìm thấy người dùng !",
+       })
+    }
+    const deleteUser = await User.findByIdAndDelete(id)
+    if(!deleteUser){
+      return res.status(400).json({
+        message: "Lỗi xóa người người dùng !",
+       })
+    }
+    console.log(user.user_username);
+      return res.status(200).json({
+        message: `xóa tài khoản người dùng thành công !`,
+        deleteUser
+      })
+      
+  } catch (error) {
+    return res.status(500).json({
+      message: "lỗi server :(("
+    })
+  }
+}
+
+export const deleteUserBySlug = async (req ,res) =>{
+  const {slug} = req.params.slug;
+  try {
+    console.log(slug);
+    const user = await User.find({slug: slug})
+    if(!user){
+       return res.status(400).json({
+        message: "không tìm thấy người dùng !",
+       })
+    }
+    const deleteUser = await User.findOneAndRemove(slug)
+    if(!deleteUser){
+      return res.status(400).json({
+        message: "Lỗi xóa người người dùng !",
+       })
+    }
+    console.log(user.user_username);
+      return res.status(200).json({
+        message: `xóa tài khoản người dùng thành công !`,
+        deleteUser
+      })
+      
+  } catch (error) {
+    return res.status(500).json({
+      message: "lỗi server :(("
+    })
+  }
+}
+
+

@@ -63,11 +63,13 @@ export const signin = async (req, res) => {
       const accessToken = generalAccessToken({
         _id: user._id,
         role_id: user.role_id,
+        slug: user.slug
       });
 
       const refreshToken = generalRefreshToken({
         _id: user._id,
         role_id: user.role_id,
+        slug: user.slug
       });
       //lưu refeshToken  vào cookie
       // await User.findByIdAndUpdate(user._id,{refreshToken: refreshToken}, {new: true})
@@ -129,10 +131,10 @@ export const requestRefreshToken = async (req, res) => {
           message: "Token error",
         });
       }
-      const { _id, role_id } = decode;
+      const { _id, role_id, slug} = decode;
       // refreshToken mới và access token mới
-      const newAccessToken = generalAccessToken({ _id, role_id });
-      const newRefreshToken = generalRefreshToken({ _id, role_id });
+      const newAccessToken = generalAccessToken({ _id, role_id, slug });
+      const newRefreshToken = generalRefreshToken({ _id, role_id, slug });
       res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
         secure: false,
