@@ -21,13 +21,13 @@ const CategorySchema = new mongoose.Schema(
       default: true,
     },
     category_image: {
-        type: Object,
-        required: true,
-        default: {
-          url: "https://i.pinimg.com/736x/e0/7a/22/e07a22eafdb803f1f26bf60de2143f7b.jpg",
-          publicId: "nbv0jiu0bitjxlxo1bqi",
-        },
+      type: Object,
+      required: true,
+      default: {
+        url: "https://i.pinimg.com/736x/e0/7a/22/e07a22eafdb803f1f26bf60de2143f7b.jpg",
+        publicId: "nbv0jiu0bitjxlxo1bqi",
       },
+    },
     category_description: {
       type: String,
       minlength: 3,
@@ -40,13 +40,11 @@ const CategorySchema = new mongoose.Schema(
         require: true,
       },
     ],
-    brand_id: [
-      {
-        type: mongoose.Types.ObjectId,
-        ref: "Brand",
-        require: true,
-      },
-    ],
+    brand_id: {
+      type: mongoose.Types.ObjectId,
+      ref: "Brand",
+      require: true,
+    },
     slug: {
       type: String,
       slug: "category_name",
