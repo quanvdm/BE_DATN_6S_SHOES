@@ -8,6 +8,7 @@ import {
   getUserById,
   getUserBySlug,
   verifyUser,
+  updateUserProfile
 } from "../controller/user";
 import { verifyUserController } from "../middleware/authenticate";
 
@@ -23,4 +24,6 @@ Router.put("/users/ban/:id", banUser);
 Router.get("/users/verify/:token", verifyUser);
 Router.delete("/users/:id", verifyUserController, deleteUser);
 Router.delete("/users/delete/slug/:slug", deleteUserBySlug);
+Router.put("/users/:id", updateUserProfile);
+
 export default Router;

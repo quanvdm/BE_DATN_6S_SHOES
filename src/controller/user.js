@@ -4,7 +4,9 @@ import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import slugify from "slugify/slugify";
 import { createUserSchema } from "../schema/user";
+import { updateUserSchema } from "../schema/user";
 import { log } from "console";
 dotenv.config();
 
@@ -310,3 +312,95 @@ export const getUserBySlug = async (req, res) => {
     });
   }
 };
+
+export const updateUserProfile = async (req, res) => {
+  const id = req.params.id;
+  const updatedUserData = req.body;
+  const {user_email,user_fullname,role_id,user_username} = req.body
+
+  try {
+    let existingUser = await User.findById(id).lean();
+    if (!existingUser) {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    }
+
+    // Sử dụng updateUserSchema để kiểm tra dữ liệu đầu vào
+    const { error } = updateUserSchema.validate(updatedUserData, {
+      abortEarly: false,
+    });
+    if (error) {
+      const errorMessages = error.details.map((detail) => detail.message);
+      return res.status(400).json({
+        message: errorMessages,
+      });
+    }
+    // Kiểm tra role_id có tồn tại không
+    if (role_id) {
+      const role = await Role.findById(role_id);
+      if (!role) {
+        return res.status(400).json({
+          message: `Quyền có id ${role_id} không hợp lệ`
+        });
+      }
+    }
+    // slug
+    if (user_fullname) {
+      const newSlug = slugify(user_fullname, { lower: true });
+      const uniqueSlug = await createUniqueSlug(newSlug, User);
+
+      existingUser.slug = uniqueSlug;
+    }
+   
+    // email
+    if (user_email) {
+      const emailExists = await User.findOne({ user_email: user_email });
+      if (emailExists && emailExists._id.toString() !== id) {
+        return res.status(400).json({ message: "Email đã tồn tại" });
+      }
+      existingUser.user_email = user_email;
+    }
+    // Kiểm  username
+    if (user_username) {
+      const usernameExists = await User.findOne({ user_username: user_username });
+      if (usernameExists && usernameExists._id.toString() !== id) {
+        return res.status(400).json({ message: "Username đã tồn tại" });
+      }
+      existingUser.user_username = user_username;
+    }
+
+    existingUser = { ...existingUser };
+    existingUser = { ...existingUser, ...updatedUserData };
+    // Lưu thay đổi vào cơ sở dữ liệu
+    await User.updateOne({ _id: id }, existingUser);
+
+    return res.status(200).json({
+      message: "Cập nhật thông tin người dùng thành công",
+      user: existingUser,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Lỗi server: " + error.message });
+  }
+};
+
+async function createUniqueSlug(baseSlug, Model) {
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const existingRecord = await Model.findOne({ slug });
+    if (!existingRecord) {
+      break;
+    }
+
+    slug = `${baseSlug}-${counter}`;
+    const nextSlug = `${baseSlug}-${counter + 1}`;
+    // Kiểm tra xem slug tiếp theo có tồn tại không
+    const nextRecord = await Model.findOne({ slug: nextSlug });
+    if (!nextRecord) {
+      slug = nextSlug;
+      break;
+    }
+    counter++;
+  }
+  return slug;
+}
