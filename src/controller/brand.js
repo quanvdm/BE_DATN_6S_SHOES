@@ -161,3 +161,43 @@ export const deleteBrand = async ( req, res ) =>{
     }
     
 }
+
+export const getBrandById = async (req, res) => {
+    const id = req.params.id;
+    try {
+      const brand = await Brand.findById(id);
+      if (!brand) {
+        return res.status(400).json({
+          message: "Không tìm thấy thương hiệu",
+        });
+      }
+      return res.status(200).json({
+        message: `Lấy dữ liệu thương hiệu theo id ${id} thành công!`,
+        brand,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error.message || "Lỗi server",
+      });
+    }
+  };
+
+  export const getBrandBySlug = async (req, res) => {
+    const slug = req.params.slug;
+    try {
+      const brand = await Brand.findOne({ slug });
+      if (!brand) {
+        return res.status(400).json({
+          message: `Không tìm thấy dữ liệu thương hiệu với slug ${slug}`,
+        });
+      }
+      return res.status(200).json({
+        message: `Lấy dữ liệu thương hiệu thành công theo slug ${slug}`,
+        brand,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error.message || "Lỗi server",
+      });
+    }
+  };
