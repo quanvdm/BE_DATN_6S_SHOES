@@ -135,3 +135,43 @@ async function createUniqueSlug(slug) {
 
   return uniqueSlug;
 }
+
+export const getAttributeById = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const attribute = await Attribute.findById({_id: id});
+    if (!attribute || attribute.attribute === 0) {
+      return res.status(400).json({
+        message: "Không tìm thấy thấy thuộc tính sản phẩm  !",
+      });
+    }
+    return res.status(200).json({
+      message: ` Lấy dữ liệu thuộc tính sản phẩm theo id : ${id} và thuộc tính là '${attribute.attribute_name}' thành công !`,
+      attribute,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "error server :((",
+    });
+  }
+};
+
+export const getAttributeBySlug = async (req, res) => {
+  const slug = req.params.slug;
+  try {
+    const attribute = await Attribute.findOne({ slug: slug });
+    if (!attribute || attribute.length === 0) {
+      return res.status(400).json({
+        message: `Không tìm được dữ liệu thuộc tính sản phẩm :${slug}`,
+      });
+    }
+    return res.status(200).json({
+      message: `Lấy dự liệu thuộc tính sản phẩm thành công bởi slug: ${slug} `,
+      attribute,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "error server :((",
+    });
+  }
+};
