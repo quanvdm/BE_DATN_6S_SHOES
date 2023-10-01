@@ -7,7 +7,6 @@ import crypto from "crypto";
 import slugify from "slugify/slugify";
 import { createUserSchema } from "../schema/user";
 import { updateUserSchema } from "../schema/user";
-import { log } from "console";
 dotenv.config();
 
 export const createUserProfile = async (req, res) => {
@@ -316,7 +315,7 @@ export const getUserBySlug = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
   const id = req.params.id;
   const updatedUserData = req.body;
-  const {user_email,user_fullname,role_id,user_username} = req.body
+  const { user_email, user_fullname, role_id, user_username } = req.body;
 
   try {
     let existingUser = await User.findById(id).lean();
@@ -339,7 +338,7 @@ export const updateUserProfile = async (req, res) => {
       const role = await Role.findById(role_id);
       if (!role) {
         return res.status(400).json({
-          message: `Quyền có id ${role_id} không hợp lệ`
+          message: `Quyền có id ${role_id} không hợp lệ`,
         });
       }
     }
@@ -350,7 +349,7 @@ export const updateUserProfile = async (req, res) => {
 
       existingUser.slug = uniqueSlug;
     }
-   
+
     // email
     if (user_email) {
       const emailExists = await User.findOne({ user_email: user_email });
@@ -361,7 +360,9 @@ export const updateUserProfile = async (req, res) => {
     }
     // Kiểm  username
     if (user_username) {
-      const usernameExists = await User.findOne({ user_username: user_username });
+      const usernameExists = await User.findOne({
+        user_username: user_username,
+      });
       if (usernameExists && usernameExists._id.toString() !== id) {
         return res.status(400).json({ message: "Username đã tồn tại" });
       }

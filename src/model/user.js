@@ -67,6 +67,11 @@ const userSchema = new mongoose.Schema(
       require: true,
       default: "650da20158cf02d766344be5",
     },
+    favorite_id: {
+      type: mongoose.Types.ObjectId,
+      ref: "Favorite",
+      require: true,
+    },
     cart_id: {
       type: mongoose.Types.ObjectId,
       ref: "Cart",
