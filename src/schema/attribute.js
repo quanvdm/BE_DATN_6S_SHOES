@@ -5,9 +5,9 @@ export const AttributeAddSchema = Joi.object({
     "string.max": "Mô tả thuộc tính không được vượt quá {#limit} ký tự",
     "any.required": "Tên thuộc tính là bắt buộc",
   }),
-  attribute_value: Joi.string().max(50).required().messages({
-    "string.empty": "Tên thuộc tính không được để trống",
+  attribute_description: Joi.string().min(2).max(255).messages({
+    "string.min": "Mô tả thuộc tính không được nhỏ hơn {#limit} ký tự",
     "string.max": "Mô tả thuộc tính không được vượt quá {#limit} ký tự",
-    "any.required": "Tên thuộc tính là bắt buộc",
+    "string.empty": "Mô tả thuộc tính không được để trống",
   }),
 });

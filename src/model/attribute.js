@@ -15,9 +15,6 @@ const attributeSchema = new mongoose.Schema(
       minLength: 2,
       maxLength: 255,
     },
-    brand_image: {
-      type: Object,
-    },
     value: [
       {
         type: Array,

@@ -9,6 +9,9 @@ const attributeValueSchema = new mongoose.Schema(
       require: true,
       maxLength: 55,
     },
+    value_image: {
+      type: Object,
+    },
     slug: {
       type: String,
       slug: "value",

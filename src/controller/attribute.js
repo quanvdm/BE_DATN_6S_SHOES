@@ -68,13 +68,13 @@ export const removeAttribute = async (req, res) => {
 };
 
 export const createAtribute = async (req, res) => {
-  const { attribute_name, attribute_value } = req.body;
+  const { attribute_name } = req.body;
   const formData = req.body;
   try {
-    const checkValue = await Attribute.findOne({ attribute_value });
+    const checkValue = await Attribute.findOne({ attribute_name });
     if (checkValue) {
       return res.status(400).json({
-        message: "Giá trị thuộc tính đã tồn tại",
+        message: "Tên thuộc tính đã tồn tại",
       });
     }
 
@@ -139,7 +139,7 @@ async function createUniqueSlug(slug) {
 export const getAttributeById = async (req, res) => {
   const id = req.params.id;
   try {
-    const attribute = await Attribute.findById({_id: id});
+    const attribute = await Attribute.findById({ _id: id });
     if (!attribute || attribute.attribute === 0) {
       return res.status(400).json({
         message: "Không tìm thấy thấy thuộc tính sản phẩm  !",
