@@ -181,7 +181,7 @@ export const getAllRole = async (req, res) => {
   try {
     const roles = await Role.paginate({}, options);
     if (!roles || roles.length === 0) {
-      return res.json({
+      return res.status(400).json({
         message: "Không có quyền nào",
       });
     }

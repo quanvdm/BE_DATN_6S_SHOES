@@ -4,7 +4,9 @@ import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import slugify from "slugify/slugify";
 import { createUserSchema } from "../schema/user";
+import { updateUserSchema } from "../schema/user";
 import { log } from "console";
 dotenv.config();
 
@@ -215,62 +217,190 @@ export const banUser = async (req, res) => {
   }
 };
 
-//dùng để check là chỉ người dùng xóa chính tài khoản họ và admin xóa người dùng , còn người khác sẽ không có quyền xóa 
-export const deleteUser = async (req ,res) =>{
-  const {id} = req.params;
+//dùng để check là chỉ người dùng xóa chính tài khoản họ và admin xóa người dùng , còn người khác sẽ không có quyền xóa
+export const deleteUser = async (req, res) => {
+  const { id } = req.params;
   try {
-    const user = await User.find({_id: id})
-    if(!user){
-       return res.status(400).json({
+    const user = await User.find({ _id: id });
+    if (!user) {
+      return res.status(400).json({
         message: "không tìm thấy người dùng !",
-       })
+      });
     }
-    const deleteUser = await User.findByIdAndDelete(id)
-    if(!deleteUser){
+    const deleteUser = await User.findByIdAndDelete(id);
+    if (!deleteUser) {
       return res.status(400).json({
         message: "Lỗi xóa người người dùng !",
-       })
+      });
     }
     console.log(user.user_username);
-      return res.status(200).json({
-        message: `xóa tài khoản người dùng thành công !`,
-        deleteUser
-      })
-      
+    return res.status(200).json({
+      message: `xóa tài khoản người dùng thành công !`,
+      deleteUser,
+    });
   } catch (error) {
     return res.status(500).json({
-      message: "lỗi server :(("
-    })
+      message: "lỗi server :((",
+    });
   }
-}
+};
 
-export const deleteUserBySlug = async (req ,res) =>{
-  const {slug} = req.params.slug;
+export const deleteUserBySlug = async (req, res) => {
+  const { slug } = req.params.slug;
   try {
     console.log(slug);
-    const user = await User.find({slug: slug})
-    if(!user){
-       return res.status(400).json({
+    const user = await User.find({ slug: slug });
+    if (!user) {
+      return res.status(400).json({
         message: "không tìm thấy người dùng !",
-       })
+      });
     }
-    const deleteUser = await User.findOneAndRemove(slug)
-    if(!deleteUser){
+    const deleteUser = await User.findOneAndRemove(slug);
+    if (!deleteUser) {
       return res.status(400).json({
         message: "Lỗi xóa người người dùng !",
-       })
+      });
     }
     console.log(user.user_username);
-      return res.status(200).json({
-        message: `xóa tài khoản người dùng thành công !`,
-        deleteUser
-      })
-      
+    return res.status(200).json({
+      message: `xóa tài khoản người dùng thành công !`,
+      deleteUser,
+    });
   } catch (error) {
     return res.status(500).json({
-      message: "lỗi server :(("
-    })
+      message: "lỗi server :((",
+    });
   }
+};
+
+export const getUserById = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const user = await User.findById(id);
+    if (!user || user.length === 0) {
+      return res.status(400).json({
+        message: "Không tìm thấy thông tin tài khoản !",
+      });
+    }
+    return res.status(200).json({
+      message: ` Lấy dữ liệu tài khoản theo id : ${id} thành công !`,
+      user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Lỗi server",
+    });
+  }
+};
+
+export const getUserBySlug = async (req, res) => {
+  const slug = req.params.slug;
+  try {
+    const user = await User.findOne({ slug });
+    if (!user || user.length === 0) {
+      return res.status(400).json({
+        message: `Không tìm được dữ liệu tài khoản slug :${slug}`,
+      });
+    }
+    return res.status(200).json({
+      message: `Lấy dự liệu tài khoản thành công bởi slug: ${slug} `,
+      user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Lỗi server",
+    });
+  }
+};
+
+export const updateUserProfile = async (req, res) => {
+  const id = req.params.id;
+  const updatedUserData = req.body;
+  const {user_email,user_fullname,role_id,user_username} = req.body
+
+  try {
+    let existingUser = await User.findById(id).lean();
+    if (!existingUser) {
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    }
+
+    // Sử dụng updateUserSchema để kiểm tra dữ liệu đầu vào
+    const { error } = updateUserSchema.validate(updatedUserData, {
+      abortEarly: false,
+    });
+    if (error) {
+      const errorMessages = error.details.map((detail) => detail.message);
+      return res.status(400).json({
+        message: errorMessages,
+      });
+    }
+    // Kiểm tra role_id có tồn tại không
+    if (role_id) {
+      const role = await Role.findById(role_id);
+      if (!role) {
+        return res.status(400).json({
+          message: `Quyền có id ${role_id} không hợp lệ`
+        });
+      }
+    }
+    // slug
+    if (user_fullname) {
+      const newSlug = slugify(user_fullname, { lower: true });
+      const uniqueSlug = await createUniqueSlug(newSlug, User);
+
+      existingUser.slug = uniqueSlug;
+    }
+   
+    // email
+    if (user_email) {
+      const emailExists = await User.findOne({ user_email: user_email });
+      if (emailExists && emailExists._id.toString() !== id) {
+        return res.status(400).json({ message: "Email đã tồn tại" });
+      }
+      existingUser.user_email = user_email;
+    }
+    // Kiểm  username
+    if (user_username) {
+      const usernameExists = await User.findOne({ user_username: user_username });
+      if (usernameExists && usernameExists._id.toString() !== id) {
+        return res.status(400).json({ message: "Username đã tồn tại" });
+      }
+      existingUser.user_username = user_username;
+    }
+
+    existingUser = { ...existingUser };
+    existingUser = { ...existingUser, ...updatedUserData };
+    // Lưu thay đổi vào cơ sở dữ liệu
+    await User.updateOne({ _id: id }, existingUser);
+
+    return res.status(200).json({
+      message: "Cập nhật thông tin người dùng thành công",
+      user: existingUser,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Lỗi server: " + error.message });
+  }
+};
+
+async function createUniqueSlug(baseSlug, Model) {
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const existingRecord = await Model.findOne({ slug });
+    if (!existingRecord) {
+      break;
+    }
+
+    slug = `${baseSlug}-${counter}`;
+    const nextSlug = `${baseSlug}-${counter + 1}`;
+    // Kiểm tra xem slug tiếp theo có tồn tại không
+    const nextRecord = await Model.findOne({ slug: nextSlug });
+    if (!nextRecord) {
+      slug = nextSlug;
+      break;
+    }
+    counter++;
+  }
+  return slug;
 }
-
-

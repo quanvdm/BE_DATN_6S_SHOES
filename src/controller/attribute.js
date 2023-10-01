@@ -2,6 +2,71 @@ import { AttributeAddSchema } from "../schema/attribute";
 import Attribute from "../model/attribute";
 import slugify from "slugify";
 
+export const getAllAttribute = async (req, res) => {
+  const {
+    _page = 1,
+    _limit = 10,
+    _sort = "createdAt",
+    _order = "asc",
+  } = req.query;
+  const options = {
+    page: _page || 1,
+    limit: _limit || 10,
+    sort: { [_sort]: _order === "asc" ? -1 : 1 },
+  };
+  try {
+    const attributes = await Attribute.paginate({}, options);
+    if (!attributes || attributes.length === 0) {
+      return res.status(400).json({
+        message: "Không tìm thấy danh sách thuộc tính",
+      });
+    }
+    return res.status(200).json({
+      message: "Lấy danh sách thuộc tính thành công",
+      attributes: attributes.docs,
+      pagination: {
+        currentPage: attributes.page,
+        totalPages: attributes.totalPages,
+        totalItems: attributes.totalDocs,
+        limit: attributes.limit,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Lỗi server",
+    });
+  }
+};
+
+export const removeAttribute = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const attribute = await Attribute.findOne({ _id: id });
+    if (!attribute) {
+      return res.status(400).json({
+        message: "Không tìm thấy thông tin thuộc tính",
+      });
+    }
+
+    // Xóa quyền
+    const deleteAttribute = await Attribute.findByIdAndDelete(id);
+    if (!deleteAttribute) {
+      return res.status(400).json({
+        message: "Xóa thuộc tính không thành công",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Xóa thuộc tính thành công",
+      deleteAttribute,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
 export const createAtribute = async (req, res) => {
   const { attribute_name, attribute_value } = req.body;
   const formData = req.body;

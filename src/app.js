@@ -10,6 +10,7 @@ import BrandRouter from "./routes/brand";
 import uploadRouter from "./routes/upload";
 import CategoryRouter from "./routes/category";
 import AttributeRouter from "./routes/attribute";
+import ProductgroupRouter from "./routes/product_group";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use("/api", BrandRouter);
 app.use("/api", uploadRouter);
 app.use("/api", CategoryRouter);
 app.use("/api", AttributeRouter);
+app.use("/api", ProductgroupRouter);
 
 // connect db
 connectDB(process.env.MONGO_URL);
