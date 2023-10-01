@@ -6,14 +6,23 @@ const attributeSchema = new mongoose.Schema(
   {
     attribute_name: {
       type: String,
-      require: true,
+      required: true,
       maxLength: 55,
     },
-    attribute_value: {
+    attribute_description: {
       type: String,
       require: true,
-      maxLength: 55,
+      minLength: 2,
+      maxLength: 255,
     },
+    brand_image: {
+      type: Object,
+    },
+    value: [
+      {
+        type: Array,
+      },
+    ],
     slug: {
       type: String,
       slug: "attribute_name",
