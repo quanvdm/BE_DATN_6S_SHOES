@@ -18,7 +18,7 @@ const productSchema = new mongoose.Schema(
       type: Array,
       required: true,
     },
-    product_description_sort: {
+    product_description_short: {
       type: String,
       minlength: 3,
       maxlength: 255,

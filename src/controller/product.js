@@ -1,4 +1,9 @@
 import Product from '../model/product'
+import Category from '../model/category'
+import Product_Group from '../model/product_group'
+import Brand from '../model/brand'
+import { ProductAddSchema } from '../schema/product';
+import slugify from 'slugify';
 
 
 export const getAllProduct = async (req, res) => {
@@ -83,3 +88,95 @@ export const deleteProduct = async (req, res) => {
         });
     }
 };
+
+
+async function createUniqueSlug(slug) {
+    let uniqueSlug = slug;
+    let counter = 1;
+    while (true) {
+      const existingProduct = await Product.findOne({ slug: uniqueSlug });
+      if (!existingProduct) {
+        break;
+      }
+  
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
+    }
+  
+    return uniqueSlug;
+  }
+  
+  
+  export const createProduct = async (req, res) => {
+    const { product_name } = req.body;
+    const formData = req.body;
+    try {
+      const checkName = await Product.findOne({ product_name });
+      if (checkName) {
+        return res.status(400).json({
+          message: "Sản phẩm đã tồn tại",
+        });
+      }
+  
+  
+  
+      // validate
+      const { error } = ProductAddSchema.validate(formData);
+      if (error) {
+        return res.status(400).json({
+          message: error.details[0].message,
+        });
+      }
+  
+      // Tạo slug
+      const slug = slugify(product_name, { lower: true });
+  
+      // cập nhật slug
+      let uniqueSlug = await createUniqueSlug(slug);
+  
+      // dữ liệu gửi đi
+      const dataPro = {
+        ...formData,
+        slug: uniqueSlug,
+      };
+  
+      const product = await Product.create(dataPro);
+      if (!product || product.length === 0) {
+        return res.status(400).json({
+          message: "Thêm sản phẩm thất bại",
+        });
+      }
+  
+      await Category.findOneAndUpdate(product.category_id, {
+          $addToSet: {
+              products: product.id,
+          }
+      })
+  
+  
+  await Product_Group.findOneAndUpdate(product.group_id, {
+    $addToSet: {
+        products: product.id,
+    }
+  })
+  
+  
+  await Brand.findOneAndUpdate(product.brand_id, {
+    $addToSet: {
+        products: product.id,
+    }
+  })
+      // cập nhật lại slug
+      product.slug = uniqueSlug;
+      await product.save();
+  
+      return res.json({
+        message: "Thêm sản phẩm thành công",
+        product,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error.message || "Lỗi server",
+      });
+    }
+  };
