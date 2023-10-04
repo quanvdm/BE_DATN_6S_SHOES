@@ -78,7 +78,6 @@ async function createUniqueSlug(slug) {
   return uniqueSlug;
 }
 
-import Product from '../model/product'
 
 
 export const getAllProductGroup = async (req, res) => {
