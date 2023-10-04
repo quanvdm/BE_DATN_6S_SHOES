@@ -79,7 +79,6 @@ async function createUniqueSlug(slug) {
 }
 
 
-
 export const getAllProductGroup = async (req, res) => {
     const {
         _page = 1,
@@ -161,4 +160,49 @@ export const deleteProductGroup = async (req, res) => {
             message: "Lỗi server: xóa sản phẩm không thành công " + error.message,
         });
     }
+};
+export const getProductGroupById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const productGroup = await Product_Group.findById(id);
+
+    if (!productGroup) {
+      return res.status(404).json({
+        message: `Không tìm thấy nhóm sản phẩm có ID ${id}`,
+      });
+    }
+
+    return res.status(200).json({
+      message: `Lấy thông tin nhóm sản phẩm theo ID ${id} thành công`,
+      productGroup,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Lỗi server",
+    });
+  }
+};
+
+export const getProductGroupBySlug = async (req, res) => {
+  const { slug } = req.params;
+
+  try {
+    const productGroup = await Product_Group.findOne({ slug });
+
+    if (!productGroup) {
+      return res.status(404).json({
+        message: `Không tìm thấy nhóm sản phẩm với slug ${slug}`,
+      });
+    }
+
+    return res.status(200).json({
+      message: `Lấy thông tin nhóm sản phẩm theo slug ${slug} thành công`,
+      productGroup,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Lỗi server",
+    });
+  }
 };
