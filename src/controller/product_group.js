@@ -1,6 +1,6 @@
 import Product_Group from "../model/product_group";
 import slugify from "slugify";
-import { GroupAddSchema } from "../schema/product_group";
+import { GroupAddSchema, updateProductGroupSchema } from "../schema/product_group";
 
 export const createProductGroup = async (req, res) => {
   const { group_name } = req.body;
@@ -200,6 +200,66 @@ export const getProductGroupBySlug = async (req, res) => {
       message: `Lấy thông tin nhóm sản phẩm theo slug ${slug} thành công`,
       productGroup,
     });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Lỗi server",
+    });
+  }
+};
+
+
+export const updateGroup = async (req, res) => {
+  const { group_name } = req.body;
+  const { id } = req.params;
+  const formData = req.body;
+  try {
+    const { error } = updateProductGroupSchema.validate(formData, {
+      abortEarly: false,
+    });
+    if (error) {
+      return res.status(400).json({
+        message: error.details[0].message,
+      });
+    }
+
+    const idGr = await Product_Group.findById(id);
+    if (!idGr || idGr.length === 0) {
+      return res.status(400).json({
+        message: "Không tìm thấy thông tin nhóm sản phẩm!",
+      });
+    }
+
+    const normalizedGroupName = group_name.toLowerCase();
+    // Kiểm tra xem danh mục đã tồn tại hay chưa
+    const checkName = await Product_Group.findOne({
+      group_name: normalizedGroupName,
+    });
+    if (checkName) {
+      return res.status(400).json({
+        message:
+          "Tên nhóm sản phẩm đã tồn tại  Vui Lòng Chọn Những Tiêu chuẩn nghĩa khác nhau",
+      });
+    }
+
+    // Tạo slug
+    const slug = slugify(group_name, { lower: true });
+    // cập nhật slug
+    let uniqueSlug = await createUniqueSlug(slug);
+
+    // dữ liệu gửi đi
+    const dataGr = { ...formData, slug: uniqueSlug };
+
+    const group = await Product_Group.findByIdAndUpdate({ _id: id }, dataGr, {
+      new: true,
+    });
+    if (!group || group.length == 0) {
+      return res.status(400).json({
+        message: "Cập nhật nhóm sản phẩm thất bại",
+      });
+    }
+    return res
+      .status(200)
+      .json({ message: "Sửa nhóm sản phẩm thành công", group });
   } catch (error) {
     return res.status(500).json({
       message: error.message || "Lỗi server",
