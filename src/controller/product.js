@@ -237,3 +237,55 @@ async function createUniqueSlug(slug) {
         .json({ message: "Server Product: " + error.message });
     }
   };
+  export const getProductByIdAndCount = async (req, res) => {
+    const { id } = req.params;
+    try {
+      const product = await Product.findOneAndUpdate(
+        { _id: id },
+        { $inc: { product_view: 1 } },
+        { new: true }
+      );
+  
+      if (!product) {
+        return res.status(404).json({
+          message: `Không tìm thấy sản phẩm có ID ${id}`,
+        });
+      }
+  
+      return res.status(200).json({
+        message: `Thông tin sản phẩm có ID ${id}`,
+        product,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error.message || "Lỗi server",
+      });
+    }
+  };
+  
+
+export const getProductBySlugAndCount = async (req, res) => {
+  const { slug } = req.params;
+  try {
+    const product = await Product.findOneAndUpdate(
+      { slug },
+      { $inc: { product_view: 1 } },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({
+        message: `Không tìm thấy sản phẩm có Slug ${slug}`,
+      });
+    }
+
+    return res.status(200).json({
+      message: `Thông tin sản phẩm có Slug ${slug}`,
+      product,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Lỗi server",
+    });
+  }
+};
