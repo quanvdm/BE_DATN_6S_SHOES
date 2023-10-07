@@ -14,6 +14,7 @@ import ProductGroupRouter from "./routes/product_group";
 import ProductFavoriteRouter from "./routes/product_favorite";
 import ProductRouter from "./routes/product"
 import VariantProductRouter from "./routes/variant_product"
+import ColorRouter from "./routes/color"
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use("/api", ProductGroupRouter);
 app.use("/api", ProductFavoriteRouter);
 app.use("/api", ProductRouter);
 app.use("/api", VariantProductRouter);
+app.use("/api", ColorRouter);
 
 // connect db
 connectDB(process.env.MONGO_URL);
