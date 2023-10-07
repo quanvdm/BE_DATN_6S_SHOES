@@ -64,3 +64,40 @@ export const addProductToFavorite = async (req, res) => {
     });
   }
 };
+
+export const getAllFavoriteProducts = async (req, res) => {
+  try {
+    const favoriteProducts = await Favorite.find().populate('products'); 
+    return res.status(200).json({
+      message: "Danh sách toàn bộ sản phẩm yêu thích",
+      favoriteProducts,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Lỗi server",
+    });
+  }
+};
+
+
+export const getFavoriteProductsByUserId = async (req, res) => {
+  const { user_id } = req.params;
+  try {
+    const favorite = await Favorite.findOne({ user_id }).populate('products'); 
+    console.log(favorite);
+    if (!favorite) {
+      return res.status(400).json({
+        message: `Không tìm thấy danh sách sản phẩm yêu thích của người dùng có ID ${user_id}`,
+      });
+    }
+    return res.status(200).json({
+      message: `Danh sách sản phẩm yêu thích của người dùng có ID ${user_id}`,
+      favorite,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Lỗi server",
+    });
+  }
+};
+
