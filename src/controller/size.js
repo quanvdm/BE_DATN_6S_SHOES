@@ -155,3 +155,46 @@ export const deleteSizeBySlug = async (req, res) => {
     });
   }
 };
+export const getSizeById = async (req ,res ) =>{
+  // const id=parseInt(req.params.id)
+  const { id } = req.params;
+  try {
+      const size = await Size.findById(id)
+      console.log(size);
+      if (!size) {
+        return res.status(400).json({
+          message: `Không tìm thấy size có ID ${id}`,
+        });
+      }
+      return res.status(200).json({
+        message: `Dữ liệu size có ID ${id}`,
+        size,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error.message || "Lỗi server",
+      });
+    }
+}
+export const getSizeBySlug = async (req ,res ) =>{
+  // const id=parseInt(req.params.id)
+  const  slug  = req.params.slug;
+  try {
+      const size = await Size.findOne({slug: slug})
+      console.log(size);
+      if (!size) {
+        return res.status(400).json({
+          message: `Không tìm thấy size có slug là :  ${slug}`,
+        });
+      }
+      console.log(slug);
+      return res.status(200).json({
+        message: `Lấy size thành công  có slug là : ${slug}`,
+        size,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error.message || "Lỗi server",
+      });
+    }
+}
