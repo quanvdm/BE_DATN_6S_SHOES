@@ -14,7 +14,7 @@ import ProductFavoriteRouter from "./routes/product_favorite";
 import ProductRouter from "./routes/product";
 import VariantProductRouter from "./routes/variant_product";
 import ColorRouter from "./routes/color";
-
+import SizeRouter from "./routes/size"
 dotenv.config();
 
 const app = express();
@@ -35,7 +35,7 @@ app.use("/api", ProductFavoriteRouter);
 app.use("/api", ProductRouter);
 app.use("/api", VariantProductRouter);
 app.use("/api", ColorRouter);
-
+app.use("/api", SizeRouter)
 // connect db
 connectDB(process.env.MONGO_URL);
 
