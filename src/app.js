@@ -9,12 +9,11 @@ import AuthRouter from "./routes/auth";
 import BrandRouter from "./routes/brand";
 import uploadRouter from "./routes/upload";
 import CategoryRouter from "./routes/category";
-import AttributeRouter from "./routes/attribute";
 import ProductGroupRouter from "./routes/product_group";
 import ProductFavoriteRouter from "./routes/product_favorite";
-import ProductRouter from "./routes/product"
-import VariantProductRouter from "./routes/variant_product"
-import ColorRouter from "./routes/color"
+import ProductRouter from "./routes/product";
+import VariantProductRouter from "./routes/variant_product";
+import ColorRouter from "./routes/color";
 
 dotenv.config();
 
@@ -31,7 +30,6 @@ app.use("/api", AuthRouter);
 app.use("/api", BrandRouter);
 app.use("/api", uploadRouter);
 app.use("/api", CategoryRouter);
-app.use("/api", AttributeRouter);
 app.use("/api", ProductGroupRouter);
 app.use("/api", ProductFavoriteRouter);
 app.use("/api", ProductRouter);
