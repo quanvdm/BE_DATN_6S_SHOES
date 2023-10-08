@@ -74,3 +74,48 @@ export const createColor = async (req, res) => {
     });
   }
 };
+
+export const getColorById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const color = await Color.findById(id);
+
+    if (!color) {
+      return res.status(404).json({
+        message: `Không tìm thấy màu sắc có ID ${id}`,
+      });
+    }
+
+    return res.status(200).json({
+      message: `Thông tin màu sắc có ID ${id}`,
+      color,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Lỗi server",
+    });
+  }
+};
+
+export const getColorBySlug = async (req, res) => {
+  const { slug } = req.params;
+  try {
+    const color = await Color.findOne({ slug });
+
+    if (!color) {
+      return res.status(404).json({
+        message: `Không tìm thấy màu sắc có Slug ${slug}`,
+      });
+    }
+
+    return res.status(200).json({
+      message: `Thông tin màu sắc có Slug ${slug}`,
+      color,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Lỗi server",
+    });
+  }
+};
+
