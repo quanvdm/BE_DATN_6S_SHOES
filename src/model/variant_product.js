@@ -8,9 +8,14 @@ const variantSchema = new mongoose.Schema(
       ref: "Product",
       require: true,
     },
-    attribute_value_id: {
+    color_id: {
       type: mongoose.Types.ObjectId,
-      ref: "Attribute",
+      ref: "Color",
+      require: true,
+    },
+    size_id: {
+      type: mongoose.Types.ObjectId,
+      ref: "Size",
       require: true,
     },
     variant_price: {
@@ -21,6 +26,7 @@ const variantSchema = new mongoose.Schema(
     variant_discount: {
       type: Number,
       min: 0,
+      default: 0,
       require: true,
     },
     variant_quantity: {
@@ -38,3 +44,4 @@ const variantSchema = new mongoose.Schema(
 );
 variantSchema.plugin(mongoosePaginate);
 export default mongoose.model("Variant_Product", variantSchema);
+
