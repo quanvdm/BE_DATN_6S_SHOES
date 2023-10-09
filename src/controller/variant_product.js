@@ -133,6 +133,18 @@ export const updateVariantProduct = async (req, res) => {
             });
         }
 
+        const existingVariant = await Variant_Product.findOne({
+            product_id: formData.product_id,
+            size_id: formData.size_id,
+            color_id: formData.color_id
+        });
+
+        if(existingVariant) {
+            return res.status(400).json({
+                message: "Sản phẩm biến thể đã tồn tại"
+            });
+        }
+
         // Dữ liệu gửi đi
         const dataVariant = { ...formData };
 
