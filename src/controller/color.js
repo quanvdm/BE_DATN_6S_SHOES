@@ -118,4 +118,82 @@ export const getColorBySlug = async (req, res) => {
     });
   }
 };
+export const getAllColor = async (req, res) => {
+  try {
+    const colors = await Color.find({}); // Lấy tất cả các màu
 
+    if (!colors || colors.length === 0) {
+      return res.status(400).json({
+        message: "Danh sách màu trống!",
+      });
+    }
+
+    const colorsWithCounts = colors.map((item) => ({
+      ...item.toObject(),
+      product_count: item.products ? item.products.length : 0,
+    }));
+
+    return res.status(200).json({
+      message: "Lấy danh sách màu thành công",
+      colors: colorsWithCounts,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
+export const deleteColorById = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const color = await Color.findById({ _id: id });
+    if (!color) {
+      return res.status(404).json({
+        message: "Không tìm thấy giá trị color!",
+      });
+    }
+
+    const DeleteColor = await Color.findByIdAndDelete({ _id: id });
+    if (!DeleteColor) {
+      return res.status(404).json({
+        message: "Xóa màu không thành công!",
+      });
+    }
+    return res.status(200).json({
+      message: `Xóa màu ${color.color_name} thành công!`,
+      DeleteColor,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Lỗi máy chủ!",
+    });
+  }
+};
+
+export const deleteColorBySlug = async (req, res) => {
+  const slug = req.params.slug;
+  try {
+    const color = await Color.findOne({ slug: slug });
+    if (!color) {
+      return res.status(404).json({
+        message: "Không tìm thấy giá trị color!",
+      });
+    }
+
+    const DeleteColor = await Color.findOneAndDelete({ slug: slug });
+    if (!DeleteColor) {
+      return res.status(404).json({
+        message: "Xóa màu không thành công!",
+      });
+    }
+    return res.status(200).json({
+      message: `Xóa màu ${slug} thành công!`,
+      DeleteColor,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Lỗi máy chủ!",
+    });
+  }
+};
