@@ -21,3 +21,24 @@ export const SizeAddSchema = Joi.object({
   }),
   slug: Joi.string()
 });
+
+
+export const updateSizeSchema = Joi.object({
+  _id: Joi.string(),
+  size_name: Joi.string().max(50).required().messages({
+    "string.empty": "Tên kích cỡ không được để trống",
+    "any.required": "Trường tên kích cỡ là bắt buộc",
+  }),
+  size_is_new: Joi.boolean(),
+  size_image: Joi.object(),
+  size_code: Joi.string(),
+  size_description: Joi.string().min(2).max(255).messages({
+    "string.min": "Mô tả kích cỡ không được nhỏ hơn {#limit} ký tự",
+    "string.max": "Mô tả kích cỡ không được vượt quá {#limit} ký tự",
+  }),
+  variant_products: Joi.array(),
+  product_count: Joi.number(),
+  slug: Joi.string(),
+  createAt: Joi.date(),
+  updateAt: Joi.date(),
+});
