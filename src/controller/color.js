@@ -1,7 +1,7 @@
 import Color from "../model/color";
 import Product from "../model/product";
 import slugify from "slugify";
-import { ColorAddSchema } from './../schema/color';
+import { ColorAddSchema, colorUpdateSchema } from './../schema/color';
 
 async function createUniqueSlug(slug) {
   let uniqueSlug = slug;
@@ -194,6 +194,62 @@ export const deleteColorBySlug = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       message: "Lỗi máy chủ!",
+    });
+  }
+};
+export const updateColor = async (req, res) => {
+  const id = req.params.id;
+  const { color_name } = req.body;
+  const body = req.body;
+
+  try {
+    const { error } = colorUpdateSchema.validate(body, {
+      abortEarly: false,
+    });
+    if (error) {
+      return res.status(400).json({
+        message: error.details.map((error) => error.message),
+      });
+    }
+
+    const slug = slugify(color_name, { lower: true });
+
+    const existingColor = await Color.findOne({ color_name });
+    if (existingColor && existingColor._id.toString() === id) {
+      return res.json({
+        message: "Không có gì thay đổi",
+        color: existingColor,
+      });
+    }
+    if (existingColor && existingColor._id.toString() !== id) {
+      return res.json({
+        message: "Trùng tên với thương hiệu khác",
+      });
+    }
+
+    const color = await Color.findByIdAndUpdate(
+      id,
+      { ...body, slug },
+      {
+        new: true,
+      }
+    );
+
+    if (!color) {
+      return res.status(400).json({
+        message: "Không tìm thấy color",
+      });
+    }
+
+    color.product_count = color.products?.length;
+
+    return res.json({
+      message: "Cập nhật color thành công",
+      color,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message,
     });
   }
 };
