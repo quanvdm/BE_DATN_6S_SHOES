@@ -1,5 +1,5 @@
 import express from "express"
-import { createColor,getColorById, getColorBySlug,deleteColorById,deleteColorBySlug,getAllColor } from "../controller/color";
+import { createColor,getColorById, getColorBySlug,deleteColorById,deleteColorBySlug,getAllColor,updateColor } from "../controller/color";
 
 
 const Router = express.Router();
@@ -10,5 +10,5 @@ Router.get("/colors/slug/:slug", getColorBySlug)
 Router.delete("/colors/:id",deleteColorById)
 Router.delete("/colors/slug/:slug",deleteColorBySlug)
 Router.get("/colors/",getAllColor)
-
+Router.put("/colors/:id", updateColor);
 export default Router
