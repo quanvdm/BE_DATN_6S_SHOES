@@ -2,7 +2,7 @@ import Variant_Product from "../model/variant_product"
 import Product from "../model/product"
 import Color from "../model/color"
 import Size from "../model/size"
-import { updateVariantSchema } from "../schema/variant_product";
+import { AddVariantProductSchema, updateVariantSchema } from "../schema/variant_product";
 
 
 export const getAllVariantProduct = async (req, res) => {
@@ -182,4 +182,83 @@ export const updateVariantProduct = async (req, res) => {
             message: error.message || "Lỗi server",
         });
     }
+};
+
+
+// create variant product
+export const createVariantProduct = async (req, res) => {
+  const formData = req.body;
+  const { color_id, size_id, product_id } = req.body;
+  try {
+    const { error } = AddVariantProductSchema.validate(formData, {
+      abortEarly: false,
+    }); 
+    if (error) {
+      const errors = error.details.map((err) => err.message);
+      return res.status(400).json({
+        message: errors,
+      });
+    }
+    const product = await Product.findById({ _id: product_id });
+    if (!product)
+      return res.status(400).json({
+        message: "Sản phẩm không tồn tại",
+      });
+    const size = await Size.findById({ _id: size_id });
+    if (!size)
+      return res.status(400).json({
+        message: "Kích thước không tồn tại",
+      });
+    const color = await Color.findById({ _id: color_id });
+    if (!color)
+      return res.status(400).json({
+        message: "Màu sắc không tồn tại",
+      });
+    // Kiểm tra xem đã tồn tại sản phẩm biến thể với color_id và size_id đã cho chưa
+    const existingVariant = await Variant_Product.findOne({
+      color_id: color_id,
+      size_id: size_id,
+      product_id: product_id,
+    });
+
+    if (existingVariant) {
+      return res.status(400).json({
+        message: `Sản phẩm biến thể với color: ${color.color_name} và size: ${size.size_name} đã tồn tại rồi.`,
+      });
+    }
+    const variantProduct = await Variant_Product.create(formData);
+    await Product.findOneAndUpdate(
+      { _id: product_id },
+      {
+        $addToSet: {
+          variant_products: variantProduct._id,
+        },
+      }
+    );
+    await Size.findOneAndUpdate(
+      { _id: size_id },
+      {
+        $addToSet: {
+          variant_products: variantProduct._id,
+        },
+      }
+    );
+    await Color.findOneAndUpdate(
+      { _id: color_id },
+      {
+        $addToSet: {
+          variant_products: variantProduct._id,
+        },
+      }
+    );
+    await variantProduct.save();
+    return res.json({
+      message: "Thêm sản phảm biến thể thành công!",
+      variantProduct,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server VariantProduct: " + error.message });
+  }
 };
