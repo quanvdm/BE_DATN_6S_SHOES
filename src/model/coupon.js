@@ -5,6 +5,9 @@ const couponSchema = new mongoose.Schema(
     coupon_name: {
       type: String,
       required: true,
+    },
+    coupon_code: {
+      type: String,
       index: true
     },
     coupon_code: {
