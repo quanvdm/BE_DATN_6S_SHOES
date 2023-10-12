@@ -1,0 +1,40 @@
+import mongoose from "mongoose";
+
+const couponSchema = new mongoose.Schema(
+  {
+    coupon_name: {
+      type: String,
+      required: true,
+      index: true
+    },
+    coupon_code: {
+      type: String,
+      min: 10,
+      max: 30,
+      required: true,
+    },
+    coupon_content: {
+      type: String,
+      required: true,
+    },
+    coupon_quantity: {
+      type: Number,
+      required: true,
+    },
+    discount_amount: {
+      type: Number,
+      required: true,
+    },
+    expiration_date: {
+      type: Date,
+      required: true,
+    },
+    min_purchase_amount: {
+      type: Number,
+      required: true,
+    },
+  },
+  { timestamps: true, versionKey: false }
+);
+
+export default mongoose.model("Coupon", couponSchema);
