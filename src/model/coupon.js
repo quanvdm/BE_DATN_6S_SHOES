@@ -8,6 +8,12 @@ const couponSchema = new mongoose.Schema(
     },
     coupon_code: {
       type: String,
+      index: true
+    },
+    coupon_code: {
+      type: String,
+      min: 10,
+      max: 30,
       required: true,
     },
     coupon_content: {
