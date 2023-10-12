@@ -69,3 +69,23 @@ export const addToCart = async (req, res) => {
     return res.status(500).json({ message: "Error server: " + error.message });
   }
 };
+
+
+export const getCartByUser = async (req,res)=>{
+  const {id} = req.params
+  try {
+     const user = await User.findById(id);
+     if (!user)
+       return res.status(500).json({ message: "Tài khoản không tồn tại!" });
+    const cart = await Cart.findOne({ user_id: id })
+      .populate({
+        path: "variant_products.variant_product_id",
+        select: "variant_price variant_discount",
+        populate: { path: "product_id", select: "product_name" },
+      });
+    if(!cart) return res.status(500).json({ message: "Danh sách giỏ hàng không tồn tại!" });
+     return res.status(200).json({ message: "Danh sách giỏ hàng theo tài khoản!",cart });
+  } catch (error) {
+    return res.status(500).json({ message: "Error server: " + error.message });
+  }
+}
