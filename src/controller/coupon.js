@@ -32,7 +32,9 @@ export const removeCoupons = async (req, res) => {
       coupon,
     });
   } catch (error) {
-    return res.status(400).json({
+    return res.status(400).json({message:"Error server"+error.message});
+  }
+}
 
 export const createCoupons = async (req, res) => {
   const formDataCoupon = req.body;
