@@ -15,6 +15,7 @@ import ProductRouter from "./routes/product";
 import VariantProductRouter from "./routes/variant_product";
 import ColorRouter from "./routes/color";
 import SizeRouter from "./routes/size"
+import CouponRouter from "./routes/coupon"
 dotenv.config();
 
 const app = express();
@@ -36,6 +37,7 @@ app.use("/api", ProductRouter);
 app.use("/api", VariantProductRouter);
 app.use("/api", ColorRouter);
 app.use("/api", SizeRouter)
+app.use("/api", CouponRouter)
 // connect db
 connectDB(process.env.MONGO_URL);
 
