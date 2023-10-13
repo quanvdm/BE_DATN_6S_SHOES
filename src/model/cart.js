@@ -8,6 +8,11 @@ const cartSchema = new mongoose.Schema(
       ref: "User",
       require: true,
     },
+    couponId: {
+      type: mongoose.Types.ObjectId,
+      ref: "Coupon",
+      default: null,
+    },
     variant_products: [
       {
         variant_product_id: {
@@ -19,15 +24,19 @@ const cartSchema = new mongoose.Schema(
           type: Number,
           default: 1,
         },
+        price: {
+          type: Number,
+          default: 0,
+        },
       },
     ],
     cart_totalPrice: {
       type: Number,
-      required: true,
+      default: 0,
     },
     cart_totalOrder: {
       type: Number,
-      required: true,
+      default: 0,
     },
   },
   { timestamps: true, versionKey: false }
