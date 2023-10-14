@@ -44,11 +44,15 @@ export const addToCart = async (req, res) => {
     if (existingItem) {
       // Nếu sản phẩm biến thể đã tồn tại trong giỏ hàng, cập nhật số lượng
       existingItem.quantity += quantity;
+      existingItem.price +=(variantProduct.variant_price - variantProduct.variant_discount) *
+        quantity;
     } else {
       // Nếu sản phẩm biến thể chưa có trong giỏ hàng, thêm vào giỏ hàng
       cart.variant_products.push({
         variant_product_id: variantProductId,
         quantity,
+        price:(variantProduct.variant_price - variantProduct.variant_discount) *
+      quantity
       });
     }
 
@@ -56,9 +60,12 @@ export const addToCart = async (req, res) => {
     cart.cart_totalPrice +=
       (variantProduct.variant_price - variantProduct.variant_discount) *
       quantity;
-    cart.cart_totalOrder += quantity;
-
-    // Cập nhật số lượng còn lại cho variant_quantity
+      console.log(cart.cart_totalPrice);
+    if (cart.cart_totalPrice < 100000) {
+        cart.cart_totalOrder = cart.cart_totalPrice + 30000;
+    }else{
+      cart.cart_totalOrder = cart.cart_totalPrice;
+    }
 
     // Lưu cập nhật vào cơ sở dữ liệu
     await cart.save();
